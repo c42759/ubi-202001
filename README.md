@@ -10,6 +10,7 @@
 
 Versions were chosen only for convenience. For production should be used python 3.8+.
 
+-----
 
 
 #### Available Users
@@ -22,6 +23,7 @@ Versions were chosen only for convenience. For production should be used python 
 
 **is_superuser:** True
 
+--
 
 
 **User:** foo
@@ -32,6 +34,8 @@ Versions were chosen only for convenience. For production should be used python 
 
 **is_superuser:** False
 
+--
+
 **User:** nofoo
 
 **Password:** nobar
@@ -41,8 +45,9 @@ Versions were chosen only for convenience. For production should be used python 
 **is_superuser:** False
 
 
+------
 
-#### Add new user
+### Add new user
 
 ```python
 from django.contrib.auth.models import User
@@ -56,9 +61,9 @@ user = User.objects.create_user(
 
 
 
+-----
 
-
-#### **POSTMAN Public Link:** 
+### **POSTMAN Public Link:** 
 
 https://www.getpostman.com/collections/072dd1af979bf6ae776e
 
@@ -72,9 +77,9 @@ Are available 3 type of requests:
 
 
 
+-----
 
-
-#### Test environment
+### Test environment
 
 Open terminal inside of the project folder and run the follow command:
 
@@ -86,10 +91,10 @@ docker-compose up -d
 PS.: If for some reason you have the port 80 already in use, update the *docker-compose.yml* file to another port. Based on this you need to update the *URLs* also in *POSTMAN* to match with your port. For example from this http://localhost/api/urban-environment/ to this http://localhost:8000/api/urban-environment/ 
 
 
+-----
 
 
-
-#### Some extra notes
+### Some extra notes
 
 I have tried to use PostGIS, but because of some inexperience of my part, I wasn't capable of successfully run it on my project. Also the SQLite was simpler to this size of project.
 
