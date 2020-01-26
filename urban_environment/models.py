@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+from django.contrib.auth import get_user_model
 from django.contrib.gis.db import models
 from django.contrib.auth.models import User
 from django.db import models
@@ -46,7 +47,28 @@ class Alerts(models.Model):
     category = models.IntegerField(choices=CATEGORIES_CHOICES, default=TO_VALIDATE, )
     description = models.TextField(blank=True)
     # location = models.PointField(srid=4326)
-    author = models.OneToOneField(User, related_name='urban_alerts')
+    author = models.ForeignKey(get_user_model(), related_query_name='urban_alerts', related_name='urban_alerts')
     status = models.IntegerField(choices=STATUS_CHOICES, default=TO_VALIDATE, )
     date_create = models.DateTimeField(auto_now_add=True)
     date_update = models.DateTimeField(auto_now=True)
+
+
+    def get_json(self):
+        return {
+            'id': self.id,
+            'category': {
+                'index': self.category,
+                'description': self.CATEGORIES_CHOICES[self.category][1]
+            },
+            'description': self.description,
+            'author': {
+                'id': self.author.id,
+                'name': self.author.username
+            },
+            'status': {
+                'index': self.status,
+                'description': self.STATUS_CHOICES[self.status][1]
+            },
+            'date_create': str(self.date_create),
+            'date_update': str(self.date_update)
+        }
