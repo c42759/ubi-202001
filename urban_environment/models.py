@@ -7,7 +7,6 @@ from django.contrib.auth.models import User
 from django.db import models
 
 
-
 class Alerts(models.Model):
     # help tip - DON'T FORGOT TO DELETE
     # Abstract: Pretende-se uma API REST que permita a gestão de ocorrências em ambiente urbano. As
@@ -47,11 +46,12 @@ class Alerts(models.Model):
     category = models.IntegerField(choices=CATEGORIES_CHOICES, default=TO_VALIDATE, )
     description = models.TextField(blank=True)
     # location = models.PointField(srid=4326)
+    latitude = models.FloatField(default=0)
+    longitude = models.FloatField(default=0)
     author = models.ForeignKey(get_user_model(), related_query_name='urban_alerts', related_name='urban_alerts')
     status = models.IntegerField(choices=STATUS_CHOICES, default=TO_VALIDATE, )
     date_create = models.DateTimeField(auto_now_add=True)
     date_update = models.DateTimeField(auto_now=True)
-
 
     def get_json(self):
         return {
@@ -61,6 +61,10 @@ class Alerts(models.Model):
                 'description': self.CATEGORIES_CHOICES[self.category][1]
             },
             'description': self.description,
+            'location': {
+                'latitude': self.latitude,
+                'longitude': self.longitude
+            },
             'author': {
                 'id': self.author.id,
                 'name': self.author.username

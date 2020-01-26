@@ -2,6 +2,7 @@ import json
 
 from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import Distance
+from django.db.models import Q
 from rest_framework import status, permissions
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
@@ -23,26 +24,40 @@ def alerts(request, alert_id=None):
             'list': []      # list of entries
         }
 
-        author = request.POST.get('author', None)
-        category = request.POST.get('category', None)
-        # longitude = request.POST.get('longitude', 0)
-        # latitude = request.POST.get('latitude', 0)
-        # radius = request.POST.get('radius', 10)
+        author = request.GET.get('author', None)
+        category = request.GET.get('category', None)
+        latitude = request.GET.get('latitude', None)
+        longitude = request.GET.get('longitude', None)
+        radius = request.GET.get('radius', None)
+        offset = int(request.GET.get('offset', 0))
+        limit = int(request.GET.get('limit', 20))
 
-        source = Alerts.objects.all()
+        f = Q()
 
         if author:
-            source.filter(author=author)
+            f = Q(f, Q(author=author))
 
         if category:
-            source.filter(category=category)
+            f = Q(f, Q(category=category))
 
-        # if longitude and latitude and radius:
-        #    source.filter(location__distance_lt=(Point(longitude, latitude), Distance(Km=radius)))
+        if latitude and longitude and radius:
+            latitude = float(latitude)
+            longitude = float(longitude)
+            radius = float(radius)
 
-        to_return['total']= source.count()
+            f = Q(
+                f,
+                Q(latitude__gte=(latitude - radius)),
+                Q(latitude__lte=(latitude + radius)),
+                Q(longitude__gte=(longitude - radius)),
+                Q(longitude__lte=(longitude + radius))
+            )
 
-        for a in source:
+        source = Alerts.objects.filter(f)
+
+        to_return['total'] = source.count()
+
+        for a in source[offset:offset+limit]:
             to_return['list'].append(a.get_json())
 
         return Response({"message": to_return})
@@ -52,23 +67,28 @@ def alerts(request, alert_id=None):
         # Tem de permitir a adicao de ocorrencias (com a localizacao geografica, e autor associados).
         # Nota: O estado default sera sempre por validar quando estas sao criadas.
         if request.user.is_authenticated():
-            # longitude = request.POST.get('longitude', 0)
-            # latitude = request.POST.get('latitude', 0)
+            longitude = request.POST.get('latitude', None)
+            latitude = request.POST.get('longitude', None)
+            description = request.POST.get('description', None)
+            category = request.POST.get('category', None)
 
-            category = int(request.POST.get('category', 0))
+            if latitude and longitude and description and category:
+                try:
+                    a = Alerts()
+                    a.category = Alerts.CATEGORIES_CHOICES[int(category)][0]
+                    a.description = description
+                    a.latitude = float(latitude)
+                    a.longitude = float(longitude)
+                    # a.location = Point(longitude, latitude, srid=4326)
+                    a.author = request.user
 
-            try:
-                a = Alerts()
-                a.category = Alerts.CATEGORIES_CHOICES[category][0]
-                a.description = request.POST.get('description', None)
-                # a.location = Point(longitude, latitude, srid=4326)
-                a.author = request.user
-
-                a.save()
-            except Exception as e:
-                return Response({"message": "__exception__", "exception": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                    a.save()
+                except Exception as e:
+                    return Response({"message": "__exception__", "exception": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                else:
+                    return Response({"message": "__success__"}, status=status.HTTP_201_CREATED)
             else:
-                return Response({"message": "__success__"}, status=status.HTTP_201_CREATED)
+                return Response({"message": "__fields_in_fault__"}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response({"message": "__authentication_required__"}, status=status.HTTP_403_FORBIDDEN)
 
