@@ -1,13 +1,11 @@
 import json
 
-from django.contrib.gis.geos import Point
-from django.contrib.gis.measure import Distance
+# from django.contrib.gis.geos import Point
+# from django.contrib.gis.measure import Distance
 from django.db.models import Q
 from rest_framework import status, permissions
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
-
-from django.core.serializers import serialize
 
 from urban_environment.models import Alerts
 
